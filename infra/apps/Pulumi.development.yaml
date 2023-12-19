@@ -1,0 +1,2 @@
+config:
+  aws:region: use-west-2
