@@ -17,21 +17,26 @@ const assistantAuth = new auth0.Client("Assistant", {
   oidcConformant: true,
   grantTypes: ["authorization_code", "refresh_token"],
   allowedLogoutUrls: [
-    "https://assistant.probablefutures.org",
-    "https://dev-assistant.probablefutures.org",
+    "https://chat.probablefutures.org",
+    "https://dev-chat.probablefutures.org",
   ],
   callbacks: [
-    "https://assistant.probablefutures.org",
-    "https://dev-assistant.probablefutures.org",
+    "https://chat.probablefutures.org",
+    "https://dev-chat.probablefutures.org",
   ],
   webOrigins: [
-    "https://assistant.probablefutures.org/",
-    "https://dev-assistant.probablefutures.org/",
+    "https://chat.probablefutures.org/",
+    "https://dev-chat.probablefutures.org/",
   ],
   name: "Probable Futures Assistant",
   logoUri:
     "https://user-images.githubusercontent.com/894075/101797194-be4c8e80-3ad7-11eb-86c8-82516c0a96f0.png",
   tokenEndpointAuthMethod: "none",
+});
+
+const clientCredentials = new auth0.ClientCredentials("Sfs", {
+  clientId: assistantAuth.clientId,
+  authenticationMethod: "client_secret_post",
 });
 
 new auth0.ConnectionClient("google-conn-assistant-client-association", {
@@ -52,3 +57,4 @@ new auth0.ConnectionClient("useDb-conn-assistant-client-association", {
 });
 
 export const assistantAuthClientId = assistantAuth.clientId;
+export const assistantAuthClientSecret = clientCredentials.clientSecret;

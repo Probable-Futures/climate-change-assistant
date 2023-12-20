@@ -54,7 +54,7 @@ new aws.route53.Record(resource, {
   ],
 });
 
-const assistantTargetGroup = new aws.lb.TargetGroup(resource, {
+export const assistantTargetGroup = new aws.lb.TargetGroup(resource, {
   healthCheck: { path: "/healthz" },
   protocol: "HTTP",
   port: config.api.port,
@@ -92,5 +92,3 @@ new aws.lb.Listener(`${resource}-https`, {
     },
   ],
 });
-
-export const assistantTargetGroupArn = assistantTargetGroup.arn;

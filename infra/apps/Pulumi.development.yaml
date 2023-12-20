@@ -1,2 +1,18 @@
 config:
-  aws:region: use-west-2
+  aws:profile: probablefutures
+  aws:region: us-west-2
+  server:assistantId:
+    secure: AAABAKkIlnssc+AB264IqxJP7KUOLIGD3xda+mJRw8MrBnj8VDI0IigiI2aFzWqTu3QSaaadRA8tcyc7YQ==
+  server:chainlitAuthSecret:
+    secure: AAABALgArUCRWTlJv1RQchyZ1XYaaLTtij50HiMhFX0UIsTmAYe5o5S1EPYz0WJeW2bsi911LPhg5O3/l5UlsWlePGWmQ42zVCWr4TIRnrYzJ0zq/BJ3KKFrOfqhhQ==
+  server:model: gpt-3.5-turbo-16k
+  server:oAuthAuth0Domain: probablefutures-dev.us.auth0.com
+  server:openApiKey:
+    secure: AAABAHrO9btW12LRWAMZHnM/XXjf89lmH0OWTb7Ka6FS4Xc9L3UTkSAbVc+ztU0nrb7+SogCm7555z8huvd18yB8zaoV3f2jAFH8AxNgmKDpDOI=
+  server:pfApiClientId:
+    secure: AAABADts9VhL/3fnh011eaYqpjy66vOnw/HFZ8OI4FT5uiUaze3ExtCDRQy3/F2thyOXDNPD4nvby5ni/y9LfQ==
+  server:pfApiClientSecret:
+    secure: AAABAL+0TWX41ZhxxAFsmlGCOcAkVYmy0KmMbjiLOq8RJt9/Tz2oKU2bTzUhZM7kzBNyiYIlSj4ap+STrLWgSlzOSXoOld4vu9yS8xIZQWMSORJ4BE7zcKT8e0A5ZZU1
+  server:serverTask:
+    cpu: 1024
+    memory: 2048

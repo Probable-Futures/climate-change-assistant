@@ -32,7 +32,7 @@ enum RequiredTagKeys {
 }
 
 type RequiredTags = {
-  [requiredTag in `${RequiredTagKeys}`]: string;
+  [requiredTag in keyof typeof RequiredTagKeys]: string;
 };
 
 type Tags = RequiredTags & aws.Tags;
