@@ -42,12 +42,17 @@ export const config = {
   assistantAuthClientSecret: assistantServicesOutput(
     "assistantAuthClientSecret"
   ),
+  assistantApiAuthClientId: assistantServicesOutput("assistantApiAuthClientId"),
+  assistantApiAuthClientSecret: assistantServicesOutput(
+    "assistantApiAuthClientSecret"
+  ),
   assistantTargetGroup: assistantServicesOutput("assistantTargetGroup"),
-  pfApiClientId: pulumiConfig.requireSecret("pfApiClientId"),
-  pfApiClientSecret: pulumiConfig.requireSecret("pfApiClientSecret"),
   assistantId: pulumiConfig.requireSecret("assistantId"),
   model: pulumiConfig.require("model"),
   openApiKey: pulumiConfig.requireSecret("openApiKey"),
   oAuthAuth0Domain: pulumiConfig.require("oAuthAuth0Domain"),
   chainlitAuthSecret: pulumiConfig.requireSecret("chainlitAuthSecret"),
+  authApiUrl: pulumiConfig.require("authApiUrl"),
+  authTokenAudience: pulumiConfig.require("authTokenAudience"),
+  authTokenUrl: pulumiConfig.require("authTokenUrl"),
 };

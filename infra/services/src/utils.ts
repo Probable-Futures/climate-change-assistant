@@ -2,28 +2,6 @@ import * as pulumi from "@pulumi/pulumi";
 import { Config as PulumiConfig } from "@pulumi/pulumi/config";
 import * as aws from "@pulumi/aws";
 
-export function getRegistryInfo(repo: aws.ecr.Repository) {
-  return repo.registryId.apply(async (registryId) => {
-    if (!registryId) {
-      throw new Error("Expected registry ID to be defined");
-    }
-    const credentials = await aws.ecr.getCredentials({ registryId });
-    const decodedCredentials = Buffer.from(
-      credentials.authorizationToken,
-      "base64"
-    ).toString();
-    const [username, password] = decodedCredentials.split(":");
-    if (!password || !username) {
-      throw new Error("Invalid credentials");
-    }
-    return {
-      server: credentials.proxyEndpoint,
-      username: username,
-      password: password,
-    };
-  });
-}
-
 enum RequiredTagKeys {
   Name = "Name",
   Environment = "Environment",

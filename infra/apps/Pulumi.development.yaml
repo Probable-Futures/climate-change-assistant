@@ -9,10 +9,9 @@ config:
   server:oAuthAuth0Domain: probablefutures-dev.us.auth0.com
   server:openApiKey:
     secure: AAABAHrO9btW12LRWAMZHnM/XXjf89lmH0OWTb7Ka6FS4Xc9L3UTkSAbVc+ztU0nrb7+SogCm7555z8huvd18yB8zaoV3f2jAFH8AxNgmKDpDOI=
-  server:pfApiClientId:
-    secure: AAABADts9VhL/3fnh011eaYqpjy66vOnw/HFZ8OI4FT5uiUaze3ExtCDRQy3/F2thyOXDNPD4nvby5ni/y9LfQ==
-  server:pfApiClientSecret:
-    secure: AAABAL+0TWX41ZhxxAFsmlGCOcAkVYmy0KmMbjiLOq8RJt9/Tz2oKU2bTzUhZM7kzBNyiYIlSj4ap+STrLWgSlzOSXoOld4vu9yS8xIZQWMSORJ4BE7zcKT8e0A5ZZU1
   server:serverTask:
     cpu: 1024
     memory: 2048
+  server:authApiUrl: https://dev-graphql.probablefutures.org
+  server:authTokenAudience: https://dev-graphql.probablefutures.com
+  server:authTokenUrl: https://probablefutures-dev.us.auth0.com/oauth/token

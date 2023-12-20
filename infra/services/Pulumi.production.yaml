@@ -5,8 +5,7 @@ config:
     secure: AAABAKntvRnH3HCTSoOmw3fwrlfSu4NPRAysM660J3cc/I7CIRdkl+zOtZYHZxzKKVHl48PHyAP+1cmF5QNqUJegxURqKP+DV52Eem7muRQkC/3M7lFh26HsYu6G242H
   auth0:domain: probablefutures.us.auth0.com
   assistant-services:auth0:
-    googleConnectionId:
-      secure: AAABAG/SAN9QSJMSAL7bKpme5PQ0DVuYpYFhIi/vg0/yUbpZu+/LyIPfoUW2DLGGrfIBUw==
+    googleConnectionId: con_P2Uwb1gsmYRs8hJ7
   aws:profile: probablefutures
   aws:region: us-west-2
   assistant-services:api:

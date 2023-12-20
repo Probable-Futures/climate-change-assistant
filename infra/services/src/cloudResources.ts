@@ -5,7 +5,7 @@ import * as cloudfront from "./heplers/cloudfront";
 import getSubdomain from "./heplers/getSubdomain";
 
 const resource = `${config.stackName}-assistant`;
-const subdomain = getSubdomain("assistant");
+const subdomain = getSubdomain("chat");
 
 const alb = new aws.lb.LoadBalancer(resource, {
   loadBalancerType: "application",

@@ -51,8 +51,8 @@ const service = new awsx.ecs.FargateService("service", {
       image: image.imageUri,
       secrets: [],
       environment: [
-        { name: "CLIENT_ID", value: config.pfApiClientId },
-        { name: "CLIENT_SECRET", value: config.pfApiClientSecret },
+        { name: "CLIENT_ID", value: config.assistantApiAuthClientId },
+        { name: "CLIENT_SECRET", value: config.assistantApiAuthClientSecret },
         { name: "MODEL", value: config.model },
         { name: "OPENAI_API_KEY", value: config.openApiKey },
         { name: "OAUTH_AUTH0_CLIENT_ID", value: config.assistantAuthClientId },
@@ -62,6 +62,9 @@ const service = new awsx.ecs.FargateService("service", {
         },
         { name: "OAUTH_AUTH0_DOMAIN", value: config.oAuthAuth0Domain },
         { name: "CHAINLIT_AUTH_SECRET", value: config.chainlitAuthSecret },
+        { name: "PF_API_URL", value: config.authApiUrl },
+        { name: "PF_TOKEN_AUDIENCE", value: config.authTokenAudience },
+        { name: "PF_TOKEN_URL", value: config.authTokenUrl },
       ],
       portMappings: [
         {

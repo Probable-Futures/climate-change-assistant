@@ -2,6 +2,28 @@ import * as auth0 from "@pulumi/auth0";
 
 import { config } from "./config";
 
+// auth client for api access
+const assistantApiAuth = new auth0.Client("AssistantApiAccess", {
+  appType: "non_interactive",
+  description: "Api Access for the AI Assistant",
+  jwtConfiguration: {
+    alg: "RS256",
+    lifetimeInSeconds: 36000, // 10 hours
+  },
+  oidcConformant: true,
+  grantTypes: ["client_credentials"],
+  name: "Api Access for the AI Assistant",
+});
+
+const apiClientCredentials = new auth0.ClientCredentials(
+  "assistant-api-client-credentials",
+  {
+    clientId: assistantApiAuth.clientId,
+    authenticationMethod: "client_secret_post",
+  }
+);
+
+// spa client for user authentication
 const assistantAuth = new auth0.Client("Assistant", {
   appType: "spa",
   description: "Probable Futures Assistant",
@@ -34,10 +56,13 @@ const assistantAuth = new auth0.Client("Assistant", {
   tokenEndpointAuthMethod: "none",
 });
 
-const clientCredentials = new auth0.ClientCredentials("Sfs", {
-  clientId: assistantAuth.clientId,
-  authenticationMethod: "client_secret_post",
-});
+const clientCredentials = new auth0.ClientCredentials(
+  "assistant-client-credentials",
+  {
+    clientId: assistantAuth.clientId,
+    authenticationMethod: "client_secret_post",
+  }
+);
 
 new auth0.ConnectionClient("google-conn-assistant-client-association", {
   connectionId: config.auth0.googleConnectionId,
@@ -58,3 +83,6 @@ new auth0.ConnectionClient("useDb-conn-assistant-client-association", {
 
 export const assistantAuthClientId = assistantAuth.clientId;
 export const assistantAuthClientSecret = clientCredentials.clientSecret;
+
+export const assistantApiAuthClientId = assistantApiAuth.clientId;
+export const assistantApiAuthClientSecret = apiClientCredentials.clientSecret;
