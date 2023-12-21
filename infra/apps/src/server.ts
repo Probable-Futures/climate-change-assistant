@@ -19,8 +19,8 @@ const repository = new awsx.ecr.Repository(assistantResource, {
 
 const image = new awsx.ecr.Image(`${assistantResource}-image`, {
   repositoryUrl: repository.url,
-  context: rootDir,
-  dockerfile: join(rootDir, "app", "Dockerfile"),
+  context: join(rootDir, "app"),
+  platform: "linux/amd64",
 });
 
 const { task, execution } = createDefaultECSRoles(assistantResource);
@@ -29,7 +29,7 @@ const logGroup = new aws.cloudwatch.LogGroup(assistantResource, {
   retentionInDays: 1,
 });
 
-const service = new awsx.ecs.FargateService("service", {
+const service = new awsx.ecs.FargateService(assistantResource, {
   cluster: config.appClusterId,
   networkConfiguration: {
     subnets: config.privateSubnetIds,
