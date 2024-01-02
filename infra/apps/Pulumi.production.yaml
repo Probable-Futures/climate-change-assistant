@@ -2,7 +2,10 @@ config:
   aws:profile: probablefutures
   aws:region: us-west-2
   server:assistantId:
-    secure: AAABAEAgD3HRDu1b5z58vNRhBnXaiB3lmGmqmazWWwNFADHeaQBINjTLqjZROLLbIHM6ySlVjkD3Ct2VTA==
+    secure: AAABAK6AOR4sediHP1z5a9ZmejwjnN/OC9kCaPghWW8RZgbbQ8GJyVhLZ/OKDC2CPmRAPRkDwaWpYzs3Fw==
+  server:authApiUrl: https://graphql.probablefutures.org
+  server:authTokenAudience: https://graphql.probablefutures.com
+  server:authTokenUrl: https://probablefutures.us.auth0.com/oauth/token
   server:chainlitAuthSecret:
     secure: AAABADGV3D6xTXG3K0Z5E9w78s+v1bJO2m+WUP2+t+oG2W6mNY4HI59T5lw0hRRuLNzvkOD2V9nhFxY+UEbCgQ2wQuT18HVfri1Szpc1EGhr4zZyAlgLWW0/liVlsA==
   server:model: gpt-4-1106-preview
@@ -12,6 +15,3 @@ config:
   server:serverTask:
     cpu: 1024
     memory: 2048
-  server:authApiUrl: https://graphql.probablefutures.org
-  server:authTokenAudience: https://graphql.probablefutures.com
-  server:authTokenUrl: https://probablefutures.us.auth0.com/oauth/token
