@@ -244,11 +244,11 @@ async def run_conversation(message_from_ui: cl.Message):
             break
 
 
-# @cl.oauth_callback
-# def oauth_callback(
-#     provider_id: str,
-#     token: str,
-#     raw_user_data: Dict[str, str],
-#     default_app_user: cl.AppUser
-# ) -> Optional[cl.AppUser]:
-#     return default_app_user
+@cl.oauth_callback
+def oauth_callback(
+    provider_id: str,
+    token: str,
+    raw_user_data: Dict[str, str],
+    default_app_user: cl.AppUser
+) -> Optional[cl.AppUser]:
+    return default_app_user
