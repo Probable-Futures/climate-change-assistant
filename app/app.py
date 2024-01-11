@@ -14,10 +14,13 @@ from typing import Optional
 from chainlit.context import context
 
 import assistant_tools as at
+import helpers
 
 api_key = os.environ.get("OPENAI_API_KEY")
 client = AsyncOpenAI(api_key=api_key)
 assistant_id = os.environ.get("ASSISTANT_ID")
+assistant_model = os.environ.get("MODEL")
+is_dev = os.environ.get("IS_DEV") == "true"
 
 
 class DictToObject:
@@ -82,6 +85,7 @@ async def run_conversation(message_from_ui: cl.Message):
     await client.beta.threads.messages.create(
         thread_id=thread.id, role="user", content=message_from_ui.content
     )
+    total_cost_for_input_and_output_token = 0.0
 
     # Send empty message to display the loader
     loader_msg = cl.Message(author="assistant", content="")
@@ -123,7 +127,6 @@ async def run_conversation(message_from_ui: cl.Message):
                 for tool_call in step_details.tool_calls:
                     # IF tool call is a disctionary, convert to object
                     if isinstance(tool_call, dict):
-                        print(tool_call)
                         tool_call = DictToObject(tool_call)
                         if tool_call.type == "function":
                             function = DictToObject(tool_call.function)
@@ -132,8 +135,6 @@ async def run_conversation(message_from_ui: cl.Message):
                             code_interpretor = DictToObject(tool_call.code_interpretor)
                             tool_call.code_interpretor = code_interpretor
 
-                    print(step_details)
-                    print(tool_call)
                     if tool_call.type == "code_interpreter":
                         if tool_call.id not in message_references:
                             message_references[tool_call.id] = cl.Message(
@@ -200,10 +201,10 @@ async def run_conversation(message_from_ui: cl.Message):
                             # Not sure why, but sometimes this is returned rather than name
                             function_name = function_name.replace("_schema", "")
 
-                            print(f"FUNCTION NAME: {function_name}")
-                            print(function_args)
-
                             output = function_mappings[function_name](**function_args)
+                            if is_dev:
+                                function_result_tokens = helpers.num_tokens_from_messages([output], assistant_model)
+                                total_cost_for_input_and_output_token += helpers.cost_of_output_tokens_per_model(function_result_tokens, assistant_model)
 
                             await client.beta.threads.runs.submit_tool_outputs(
                                 thread_id=thread.id,
@@ -220,14 +221,34 @@ async def run_conversation(message_from_ui: cl.Message):
 
         print(f"RUN STATUS: {run.status}")
         if run.status in ["cancelled", "failed", "completed", "expired"]:
+            if is_dev:
+                all_messages = await client.beta.threads.messages.list(thread_id=thread.id)
+
+                user_messages = [msg.content[0].text.value for msg in all_messages.data if msg.role == 'user']
+                assistant_messages = [msg.content[0].text.value for msg in all_messages.data if msg.role == 'assistant']
+
+                user_tokens = helpers.num_tokens_from_messages(user_messages, assistant_model)
+                assistant_tokens = helpers.num_tokens_from_messages(assistant_messages, assistant_model)
+
+                total_cost_for_input_and_output_token += helpers.cost_of_input_tokens_per_model(user_tokens, assistant_model)
+                + helpers.cost_of_output_tokens_per_model(assistant_tokens, assistant_model)
+
+                note_message = "Note that the assistant intelligently chooses which context from the thread to include when calling the model which means the price could be higher."
+
+                cost_message = cl.Message(
+                    author="system",
+                    content=f"The total cost for input and output tokens is {round(total_cost_for_input_and_output_token, 6)}.\n{note_message}"
+                )
+                await cost_message.send()
+
             break
 
 
-@cl.oauth_callback
-def oauth_callback(
-    provider_id: str,
-    token: str,
-    raw_user_data: Dict[str, str],
-    default_app_user: cl.AppUser
-) -> Optional[cl.AppUser]:
-    return default_app_user
+# @cl.oauth_callback
+# def oauth_callback(
+#     provider_id: str,
+#     token: str,
+#     raw_user_data: Dict[str, str],
+#     default_app_user: cl.AppUser
+# ) -> Optional[cl.AppUser]:
+#     return default_app_user
