@@ -2,6 +2,10 @@ from tiktoken import (
     encoding_for_model,
     get_encoding,
 )
+from openai.types.beta.threads import (
+    MessageContentText,
+)
+import consts
 
 
 def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
@@ -40,7 +44,8 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
     return num_tokens
 
 
-def cost_of_input_tokens_per_model(user_tokens, model="gpt-3.5-turbo-0613"):
+def cost_of_input_tokens_per_model(user_tokens):
+    model = consts.assistant_model
     user_tokens_cost = 0.0
     if model == "gpt-4-1106-preview" or model == "gpt-4-1106-vision-preview":
         user_tokens_cost = (user_tokens * 0.01) / 1000
@@ -59,7 +64,8 @@ def cost_of_input_tokens_per_model(user_tokens, model="gpt-3.5-turbo-0613"):
     return user_tokens_cost
 
 
-def cost_of_output_tokens_per_model(assistant_tokens, model="gpt-3.5-turbo-0613"):
+def cost_of_output_tokens_per_model(assistant_tokens):
+    model = consts.assistant_model
     assistant_tokens_cost = 0.0
     if model == "gpt-4-1106-preview" or model == "gpt-4-1106-vision-preview":
         assistant_tokens_cost = (assistant_tokens * 0.03) / 1000
@@ -76,3 +82,21 @@ def cost_of_output_tokens_per_model(assistant_tokens, model="gpt-3.5-turbo-0613"
             f"""cost_of_output_tokens_per_model() is not implemented for model {model}."""
         )
     return assistant_tokens_cost
+
+
+def tokens_per_user(all_messages):
+    user_messages = []
+    assistant_messages = []
+
+    for msg in all_messages:
+        for idx, content_message in enumerate(msg.content):
+            if isinstance(content_message, MessageContentText):
+                if msg.role == "user":
+                    user_messages.append(content_message.text.value)
+                elif msg.role == "assistant":
+                    assistant_messages.append(content_message.text.value)
+
+    user_tokens = num_tokens_from_messages(user_messages, consts.assistant_model)
+    assistant_tokens = num_tokens_from_messages(assistant_messages, consts.assistant_model)
+
+    return [user_tokens, assistant_tokens]

@@ -14,13 +14,11 @@ from typing import Optional
 from chainlit.context import context
 
 import assistant_tools as at
-import helpers
+import price_helper
+import consts
 
 api_key = os.environ.get("OPENAI_API_KEY")
 client = AsyncOpenAI(api_key=api_key)
-assistant_id = os.environ.get("ASSISTANT_ID")
-assistant_model = os.environ.get("MODEL")
-is_dev = os.environ.get("IS_DEV") == "true"
 
 
 class DictToObject:
@@ -85,7 +83,6 @@ async def run_conversation(message_from_ui: cl.Message):
     await client.beta.threads.messages.create(
         thread_id=thread.id, role="user", content=message_from_ui.content
     )
-    total_cost_for_input_and_output_token = 0.0
 
     # Send empty message to display the loader
     loader_msg = cl.Message(author="assistant", content="")
@@ -93,7 +90,7 @@ async def run_conversation(message_from_ui: cl.Message):
 
     # Create the run
     run = await client.beta.threads.runs.create(
-        thread_id=thread.id, assistant_id=assistant_id
+        thread_id=thread.id, assistant_id=consts.assistant_id
     )
 
     message_references = {}  # type: Dict[str, cl.Message]
@@ -202,9 +199,6 @@ async def run_conversation(message_from_ui: cl.Message):
                             function_name = function_name.replace("_schema", "")
 
                             output = function_mappings[function_name](**function_args)
-                            if is_dev:
-                                function_result_tokens = helpers.num_tokens_from_messages([output], assistant_model)
-                                total_cost_for_input_and_output_token += helpers.cost_of_output_tokens_per_model(function_result_tokens, assistant_model)
 
                             await client.beta.threads.runs.submit_tool_outputs(
                                 thread_id=thread.id,
@@ -221,34 +215,31 @@ async def run_conversation(message_from_ui: cl.Message):
 
         print(f"RUN STATUS: {run.status}")
         if run.status in ["cancelled", "failed", "completed", "expired"]:
-            if is_dev:
+            if consts.is_dev:
                 all_messages = await client.beta.threads.messages.list(thread_id=thread.id)
+                [input_tokens, output_tokens] = price_helper.tokens_per_user(all_messages.data[2:])  # skip last two messages, will be included in the code below
+                [tokens_for_last_input_message, tokens_for_last_output_message] = price_helper.tokens_per_user(all_messages.data[:2])  # skip last two messages, will be included in the code below
 
-                user_messages = [msg.content[0].text.value for msg in all_messages.data if msg.role == 'user']
-                assistant_messages = [msg.content[0].text.value for msg in all_messages.data if msg.role == 'assistant']
-
-                user_tokens = helpers.num_tokens_from_messages(user_messages, assistant_model)
-                assistant_tokens = helpers.num_tokens_from_messages(assistant_messages, assistant_model)
-
-                total_cost_for_input_and_output_token += helpers.cost_of_input_tokens_per_model(user_tokens, assistant_model)
-                + helpers.cost_of_output_tokens_per_model(assistant_tokens, assistant_model)
-
-                note_message = "Note that the assistant intelligently chooses which context from the thread to include when calling the model which means the price could be higher."
+                cost = price_helper.cost_of_input_tokens_per_model(input_tokens)
+                + price_helper.cost_of_output_tokens_per_model(output_tokens)
+                + price_helper.cost_of_input_tokens_per_model(tokens_for_last_input_message)
+                + price_helper.cost_of_output_tokens_per_model(tokens_for_last_output_message)
+                + price_helper.cost_of_input_tokens_per_model(input_tokens + output_tokens)  # the assistant will read all previous messages as input to generate the response
 
                 cost_message = cl.Message(
                     author="system",
-                    content=f"The total cost for input and output tokens is {round(total_cost_for_input_and_output_token, 6)}.\n{note_message}"
+                    content=f"The minimum total cost for this conversation so far is: ${round(cost, 6)}.\n{consts.note_message}"
                 )
                 await cost_message.send()
 
             break
 
 
-@cl.oauth_callback
-def oauth_callback(
-    provider_id: str,
-    token: str,
-    raw_user_data: Dict[str, str],
-    default_app_user: cl.AppUser
-) -> Optional[cl.AppUser]:
-    return default_app_user
+# @cl.oauth_callback
+# def oauth_callback(
+#     provider_id: str,
+#     token: str,
+#     raw_user_data: Dict[str, str],
+#     default_app_user: cl.AppUser
+# ) -> Optional[cl.AppUser]:
+#     return default_app_user
