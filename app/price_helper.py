@@ -2,10 +2,14 @@ from tiktoken import (
     encoding_for_model,
     get_encoding,
 )
+from decimal import Decimal, getcontext
 from openai.types.beta.threads import (
     MessageContentText,
 )
+
 import consts
+
+getcontext().prec = 7
 
 
 def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
@@ -61,7 +65,7 @@ def cost_of_input_tokens_per_model(user_tokens):
         raise NotImplementedError(
             f"""cost_of_input_tokens_per_model() is not implemented for model {model}."""
         )
-    return user_tokens_cost
+    return Decimal(user_tokens_cost)
 
 
 def cost_of_output_tokens_per_model(assistant_tokens):
@@ -81,7 +85,7 @@ def cost_of_output_tokens_per_model(assistant_tokens):
         raise NotImplementedError(
             f"""cost_of_output_tokens_per_model() is not implemented for model {model}."""
         )
-    return assistant_tokens_cost
+    return Decimal(assistant_tokens_cost)
 
 
 def tokens_per_user(all_messages):
