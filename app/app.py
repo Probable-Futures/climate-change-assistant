@@ -12,9 +12,13 @@ from openai.types.beta.threads import (
 import chainlit as cl
 from typing import Optional
 from chainlit.context import context
+from decimal import Decimal
 
 import assistant_tools as at
 import prompts as pr
+import price_helper
+import consts
+
 
 api_key = os.environ.get("OPENAI_API_KEY")
 client = AsyncOpenAI(api_key=api_key)
@@ -303,4 +307,31 @@ async def run_conversation(message_from_ui: cl.Message):
         print(f"RUN STATUS: {run.status}")
 
         if run.status in ["cancelled", "failed", "completed", "expired"]:
+            if consts.is_dev:
+                all_messages = await client.beta.threads.messages.list(thread_id=thread.id)
+                [input_tokens, output_tokens] = price_helper.tokens_per_user(all_messages.data[2:])  # skip last two messages
+                [tokens_for_last_input_message, tokens_for_last_output_message] = price_helper.tokens_per_user(all_messages.data[:2])  # tokens of the last 2 messages (top of the list are the latest messages)
+                cost = sum([
+                    Decimal(3 * 0.04),  # dalle-3 images: Standard 1024×1024 image cost is 0.04
+                    price_helper.cost_of_input_tokens_per_model(input_tokens),
+                    price_helper.cost_of_output_tokens_per_model(output_tokens),
+                    price_helper.cost_of_input_tokens_per_model(tokens_for_last_input_message),
+                    price_helper.cost_of_output_tokens_per_model(tokens_for_last_output_message),
+                    price_helper.cost_of_input_tokens_per_model(input_tokens + output_tokens)  # the assistant will read all previous messages as input to generate the response
+                ])
+                cost_message = cl.Message(
+                    author="system",
+                    content=f"The minimum total cost for this conversation so far is: ${round(cost, 6)}\n{consts.note_message}"
+                )
+                await cost_message.send()
             break
+
+
+@cl.oauth_callback
+def oauth_callback(
+    provider_id: str,
+    token: str,
+    raw_user_data: Dict[str, str],
+    default_app_user: cl.AppUser
+) -> Optional[cl.AppUser]:
+    return default_app_user

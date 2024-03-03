@@ -13,10 +13,10 @@ import sys
 import io
 import base64
 import urllib
-from PIL import Image
+# from PIL import Image
 
-from diffusers import AutoPipelineForText2Image  # , AutoPipelineForImage2Image
-import torch
+# from diffusers import AutoPipelineForText2Image  # , AutoPipelineForImage2Image
+# import torch
 
 import prompts as pr
 
