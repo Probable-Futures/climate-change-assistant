@@ -72,6 +72,7 @@ async def process_thread_message(
 async def start_chat():
     thread = await client.beta.threads.create()
     cl.user_session.set("thread", thread)
+    cl.user_session.set("generated_image_count", 0)
     await cl.Message(author="Climate Change Assistant", content="Hi! I'm your climate change assistant to help you prepare. What location are you interested in?").send()
 
 
@@ -282,6 +283,10 @@ async def run_conversation(message_from_ui: cl.Message):
 
                                     print('\n generating image, begin')
 
+                                    generated_image_count = cl.user_session.get("generated_image_count")
+                                    generated_image_count += 1
+                                    cl.user_session.set("generated_image_count", generated_image_count)
+
                                     # uncomment this line/ switch with 283 to run stable diffusion XL with GPU
                                     # img = cl.Image(content=at.get_image_response_SDXL(at.summarizer(output)), name="image1", display="inline", size="large")  # _SDXL
                                     img = cl.Image(url=at.get_image_response(pr.storyboard_prompt, at.summarizer(output)), name="image1", display="inline", size="large")
@@ -308,11 +313,14 @@ async def run_conversation(message_from_ui: cl.Message):
 
         if run.status in ["cancelled", "failed", "completed", "expired"]:
             if consts.is_dev:
+                image_count = cl.user_session.get("generated_image_count")
+                print("Count =", image_count)
+
                 all_messages = await client.beta.threads.messages.list(thread_id=thread.id)
                 [input_tokens, output_tokens] = price_helper.tokens_per_user(all_messages.data[2:])  # skip last two messages
                 [tokens_for_last_input_message, tokens_for_last_output_message] = price_helper.tokens_per_user(all_messages.data[:2])  # tokens of the last 2 messages (top of the list are the latest messages)
                 cost = sum([
-                    Decimal(3 * 0.04),  # dalle-3 images: Standard 1024×1024 image cost is 0.04
+                    Decimal(image_count * 0.04),  # dalle-3 images: Standard 1024×1024 image cost is 0.04
                     price_helper.cost_of_input_tokens_per_model(input_tokens),
                     price_helper.cost_of_output_tokens_per_model(output_tokens),
                     price_helper.cost_of_input_tokens_per_model(tokens_for_last_input_message),
