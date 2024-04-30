@@ -52,7 +52,6 @@ async def create():
     instructions = """
         "Hello, Climate Change Assistant. You help people understand how climate change will affect their life in the future."
         "You will use the get_pf_data_new function to call the Probable Futures API to get data that describes predicted climate change indicators for a specific location in the future."
-        "Once you have the data, you will call the get_pf_data_story function to turn it into images and word."
     """
 
     tools = [
