@@ -1,6 +1,14 @@
 # @probable-futures/climate-change-assistant
 
-This chainlit app will use an [OpenAI Assistant](https://platform.openai.com/docs/assistants/overview) and the [Probable futures](https://probablefutures.org/) API to provide climate change information for a location, and provide some helpful resources for how to prepare.
+This project was created by [Matthew Harris](https://www.linkedin.com/in/matthew-harris-4018865) at [DataKind](https://www.datakind.org/) using the [Probable Futures open data resources](https://probablefutures.org/open-data/). Matthew published [a blog post about creating this project](https://towardsdatascience.com/preparing-for-climate-change-with-an-ai-assistant-cdceb5ce4426) which contains extensive detail about his approach. This repository is a fork of [Matthew's original repository](https://github.com/datakind/climate-change-assistant) and is not owned by Probable Futures, but rather is an experimental open source project that anyone is welcome to experiment with under Matthew's original terms. 
+
+> [!CAUTION]
+> This application is an experiment. Do not use it in publicly accessible applications. It should be used for experimental and research purposes only. 
+
+If you are looking for climate change data that is ready for public use, please see the [Probable Futures climate handbook](https://probablefutures.org/stability/), [climate maps](https://probablefutures.org/maps/), and [open data resources](https://probablefutures.org/open-data/). To learn more about Probable Futures, please visit the [Probable Futures website](https://probablefutures.org/). 
+
+## About the app
+This chainlit app will use an [OpenAI Assistant](https://platform.openai.com/docs/assistants/overview) and the [Probable futures](https://probablefutures.org/) API to provide climate change information for a location, and provide some helpful resources for how to prepare. 
 
 The chainlit app is based off the cookbook example [here](https://github.com/Chainlit/cookbook/tree/main/openai-assistant).
 
