@@ -15,8 +15,8 @@ import base64
 import urllib
 from PIL import Image
 
-from diffusers import AutoPipelineForText2Image
-import torch
+# from diffusers import AutoPipelineForText2Image
+# import torch
 
 import prompts as pr
 
@@ -27,16 +27,23 @@ pf_token_url = os.getenv("PF_TOKEN_URL")
 load_dotenv()
 client = OpenAI()
 
-gpu = torch.cuda.is_available()
-if gpu:
-    pipeline_text2image = AutoPipelineForText2Image.from_pretrained("stabilityai/sdxl-turbo", torch_dtype=torch.float16, variant="fp16")
-    pipeline_text2image = pipeline_text2image.to("cuda")
-    pipeline_text2image.save_pretrained("./models/")
-    pipeline_text2image = AutoPipelineForText2Image.from_pretrained("./models/", torch_dtype=torch.float16, variant="fp16")
-else:
-    pipeline_text2image = AutoPipelineForText2Image.from_pretrained("stabilityai/sdxl-turbo")
-    pipeline_text2image.save_pretrained("./models/")
-    pipeline_text2image = AutoPipelineForText2Image.from_pretrained("./models/")
+# gpu = torch.cuda.is_available()
+# if gpu:
+#     pipeline_text2image = AutoPipelineForText2Image.from_pretrained(
+#         "stabilityai/sdxl-turbo", torch_dtype=torch.float16, variant="fp16"
+#     )
+#     pipeline_text2image = pipeline_text2image.to("cuda")
+#     pipeline_text2image.save_pretrained("./models/")
+#     pipeline_text2image = AutoPipelineForText2Image.from_pretrained(
+#         "./models/", torch_dtype=torch.float16, variant="fp16"
+#     )
+# else:
+#     pipeline_text2image = AutoPipelineForText2Image.from_pretrained(
+#         "stabilityai/sdxl-turbo"
+#     )
+#     pipeline_text2image.save_pretrained("./models/")
+#     pipeline_text2image = AutoPipelineForText2Image.from_pretrained("./models/")
+
 
 def convert_to_iso8601(date_str):
     try:
@@ -73,24 +80,29 @@ def get_pf_token():
 def json_to_dataframe(json_data, address, country):
     # Extract the relevant part of the JSON data
     json_data = json.loads(json_data)
-    data = json_data['data']['getDatasetStatistics']['datasetStatisticsResponses']
+    data = json_data["data"]["getDatasetStatistics"]["datasetStatisticsResponses"]
     # Convert to a DataFrame
     df = pd.DataFrame(data)
     # Normalize the 'info' column if needed
-    if not df['info'].apply(lambda x: x == {}).all():
-        info_df = pd.json_normalize(df['info'])
-        df = df.drop(columns=['info']).join(info_df)
-    df['address'] = address
-    df['country'] = country
-    df = df[['address', 'country', 'name', 'midValue', 'unit']]
-    df = df[df['name'].str.contains('Change')]
-    df = df[~(df['midValue'] == '0.0')]
+    if not df["info"].apply(lambda x: x == {}).all():
+        info_df = pd.json_normalize(df["info"])
+        df = df.drop(columns=["info"]).join(info_df)
+    df["address"] = address
+    df["country"] = country
+    df = df[["address", "country", "name", "midValue", "unit"]]
+    df = df[df["name"].str.contains("Change")]
+    df = df[~(df["midValue"] == "0.0")]
     df.reset_index(drop=True, inplace=True)
     return df
 
+
 def story_splitter(parsed_output):
-    temperature_output = parsed_output[parsed_output.name.str.contains("nights|balance|dry hot")]
-    water_output = parsed_output[parsed_output.name.str.contains("annual|wettest|frequency")]
+    temperature_output = parsed_output[
+        parsed_output.name.str.contains("nights|balance|dry hot")
+    ]
+    water_output = parsed_output[
+        parsed_output.name.str.contains("annual|wettest|frequency")
+    ]
     land_output = parsed_output[parsed_output.name.str.contains("drought|wildfire")]
 
     return temperature_output, water_output, land_output
@@ -101,9 +113,9 @@ def summary_completion(content):
         model="gpt-4-0125-preview",  # gpt-4 #gpt-3.5-turbo-16k
         messages=[
             {"role": "system", "content": pr.summary_system_prompt},
-            {"role": "user", "content": content}
+            {"role": "user", "content": content},
         ],
-        stream=True
+        stream=True,
     )
 
     return completion  # .choices[0].message.content
@@ -114,38 +126,48 @@ def story_completion(story_system_prompt, content):
         model="gpt-4-0125-preview",  # gpt-4 #gpt-3.5-turbo-16k
         messages=[
             {"role": "system", "content": story_system_prompt},
-            {"role": "user", "content": str(content.to_json())}
+            {"role": "user", "content": str(content.to_json())},
         ],
-        stream=True
+        stream=True,
     )
 
     return completion  # .choices[0].message.content
 
+
 # need GPU to run this part; uncomment lines 31 & 32
-def get_image_response_SDXL(prompt):
-    print('starting SDXL')
-    if gpu:
-        image = pipeline_text2image(prompt=prompt, num_inference_steps=4, guidance_scale=0.0).images[0]
-    else:
-        image = pipeline_text2image(prompt=prompt, num_inference_steps=1, guidance_scale=0.0).images[0]
-    buffer = io.BytesIO()
-    image.save(buffer, format='PNG')
-    image_bytes = buffer.getvalue()
-    return image_bytes
+# def get_image_response_SDXL(prompt):
+#     print("starting SDXL")
+#     if gpu:
+#         image = pipeline_text2image(
+#             prompt=prompt, num_inference_steps=4, guidance_scale=0.0
+#         ).images[0]
+#     else:
+#         image = pipeline_text2image(
+#             prompt=prompt, num_inference_steps=1, guidance_scale=0.0
+#         ).images[0]
+#     buffer = io.BytesIO()
+#     image.save(buffer, format="PNG")
+#     image_bytes = buffer.getvalue()
+#     return image_bytes
 
 
 # dall-e-3 image completion version
 def get_image_response(storyboard_prompt, prompt):
-    print(storyboard_prompt + ' ' + '\nSTORY CHUNK:' + '\n' + prompt)
+    print(storyboard_prompt + " " + "\nSTORY CHUNK:" + "\n" + prompt)
     response = client.images.generate(
         model="dall-e-3",
-        prompt=storyboard_prompt + '\n---------' + '\nSTORY CHUNK:' + '\n' + prompt,  # "a white siamese cat"
+        prompt=storyboard_prompt
+        + "\n---------"
+        + "\nSTORY CHUNK:"
+        + "\n"
+        + prompt,  # "a white siamese cat"
         size="1024x1024",
         quality="standard",
         n=1,
     )
 
     return response.data[0].url
+
 
 def get_pf_data_new(address, country, warming_scenario="2.0"):
     variables = {}
@@ -155,10 +177,15 @@ def get_pf_data_new(address, country, warming_scenario="2.0"):
         address: "{address}"
     """
 
-    query = ("""
+    query = (
+        """
             mutation {
-                getDatasetStatistics(input: { """ + location + """ \
-                    warmingScenario: \"""" + warming_scenario + """\"
+                getDatasetStatistics(input: { """
+        + location
+        + """ \
+                    warmingScenario: \""""
+        + warming_scenario
+        + """\"
                 }) {
                 datasetStatisticsResponses{
                     datasetId
@@ -172,7 +199,8 @@ def get_pf_data_new(address, country, warming_scenario="2.0"):
                 }
             }
         }
-    """)
+    """
+    )
     print(query)
 
     access_token = get_pf_token()
@@ -197,9 +225,15 @@ def summarizer(content):
         model="gpt-3.5-turbo-16k",  # gpt-4 # gpt-4-0125-preview
         messages=[
             {"role": "system", "content": pr.summarizer_prompt},
-            {"role": "user", "content": content}
+            {"role": "user", "content": content},
         ],
-        stream=False
+        stream=False,
     )
-    print(str(completion.choices[0].message.content) + " centered, ominous, eerie, highly detailed, digital painting, artstation, concept art, smooth, sharp focus, illustration")
-    return str(completion.choices[0].message.content) + " centered, ominous, eerie, highly detailed, digital painting, artstation, concept art, smooth, sharp focus, illustration"
+    print(
+        str(completion.choices[0].message.content)
+        + " centered, ominous, eerie, highly detailed, digital painting, artstation, concept art, smooth, sharp focus, illustration"
+    )
+    return (
+        str(completion.choices[0].message.content)
+        + " centered, ominous, eerie, highly detailed, digital painting, artstation, concept art, smooth, sharp focus, illustration"
+    )

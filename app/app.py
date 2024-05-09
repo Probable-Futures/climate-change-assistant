@@ -24,10 +24,12 @@ api_key = os.environ.get("OPENAI_API_KEY")
 client = AsyncOpenAI(api_key=api_key)
 assistant_id = os.environ.get("ASSISTANT_ID")
 
+
 class DictToObject:
     def __init__(self, dictionary):
         for key, value in dictionary.items():
             setattr(self, key, value)
+
 
 async def process_thread_message(
     message_references: Dict[str, cl.Message], thread_message: ThreadMessage
@@ -55,7 +57,7 @@ async def process_thread_message(
                     size="large",
                 ),
             ]
-            print('trying to display message line 53')
+            print("trying to display message line 53")
 
             if id not in message_references:
                 message_references[id] = cl.Message(
@@ -73,7 +75,10 @@ async def start_chat():
     thread = await client.beta.threads.create()
     cl.user_session.set("thread", thread)
     cl.user_session.set("generated_image_count", 0)
-    await cl.Message(author="Climate Change Assistant", content="Hi! I'm your climate change assistant to help you prepare. What location are you interested in?").send()
+    await cl.Message(
+        author="Climate Change Assistant",
+        content="Hi! I'm your climate change assistant to help you prepare. What location are you interested in?",
+    ).send()
 
 
 @cl.on_message
@@ -127,11 +132,13 @@ async def run_conversation(message_from_ui: cl.Message):
 
             if step_details.type == "tool_calls":
                 loading_message = "Retrieving information, please stand by."
-                loading_message_to_assistant = cl.Message(author="assistant", content=loading_message)
+                loading_message_to_assistant = cl.Message(
+                    author="assistant", content=loading_message
+                )
                 await loading_message_to_assistant.send()  # output_message_to_assistant.send()
 
                 for tool_call in step_details.tool_calls:
-                    print('top of tool call loop line 119')
+                    print("top of tool call loop line 119")
 
                     # IF tool call is a disctionary, convert to object
                     if isinstance(tool_call, dict):
@@ -220,12 +227,14 @@ async def run_conversation(message_from_ui: cl.Message):
                             print(f"FUNCTION NAME: {function_name}")
                             print(function_args)
 
-                            summary, parsed_output = function_mappings[function_name](**function_args)  # , output, image
+                            summary, parsed_output = function_mappings[function_name](
+                                **function_args
+                            )  # , output, image
 
                             # img = cl.Image(url=image, name="image1", display="inline", size="large")  # path=image_path,
                             # img = Image.open(filename)
 
-                            print('line 213 bottom of tool loop')
+                            print("line 213 bottom of tool loop")
 
                             if summary is not None:  # output
                                 # tool_output_id = tool_call.id + "output"
@@ -247,21 +256,31 @@ async def run_conversation(message_from_ui: cl.Message):
                                 await msg.update()
 
                                 loading_message = "Now, let's take a closer look at what life will look like in the future in that city."
-                                loading_message_to_assistant = cl.Message(author="assistant", content=loading_message)
+                                loading_message_to_assistant = cl.Message(
+                                    author="assistant", content=loading_message
+                                )
                                 await loading_message_to_assistant.send()
 
                                 # Send the story and image to the UI in chunks
-                                temperature_output, water_output, land_output = at.story_splitter(parsed_output)
+                                temperature_output, water_output, land_output = (
+                                    at.story_splitter(parsed_output)
+                                )
 
-                                story_chunks = [temperature_output, water_output, land_output]
-                                print('got story chunks')
+                                story_chunks = [
+                                    temperature_output,
+                                    water_output,
+                                    land_output,
+                                ]
+                                print("got story chunks")
 
                                 # iterating through this list
                                 # prompts_list = [temperature_prompt, water_prompt, land_prompt]
 
                                 for i in range(len(story_chunks)):
                                     output = ""
-                                    story = at.story_completion(pr.prompts_list[i], story_chunks[i])
+                                    story = at.story_completion(
+                                        pr.prompts_list[i], story_chunks[i]
+                                    )
 
                                     print(story)
 
@@ -281,19 +300,40 @@ async def run_conversation(message_from_ui: cl.Message):
 
                                     # await cl.sleep(10)
 
-                                    print('\n generating image, begin')
+                                    print("\n generating image, begin")
 
-                                    generated_image_count = cl.user_session.get("generated_image_count")
+                                    generated_image_count = cl.user_session.get(
+                                        "generated_image_count"
+                                    )
                                     generated_image_count += 1
-                                    cl.user_session.set("generated_image_count", generated_image_count)
+                                    cl.user_session.set(
+                                        "generated_image_count", generated_image_count
+                                    )
 
                                     # uncomment this line/ switch with 283 to run stable diffusion XL with GPU
-                                    img = cl.Image(content=at.get_image_response_SDXL(at.summarizer(output)), name="image1", display="inline", size="large")  # _SDXL
-                                    # img = cl.Image(url=at.get_image_response(pr.storyboard_prompt, at.summarizer(output)), name="image1", display="inline", size="large")
-                                    print('\n generating image, complete')
-                                    image_message_to_assistant = cl.Message(author="Climate Change Assistant", content=' ', elements=[img])
+                                    # img = cl.Image(
+                                    #     content=at.get_image_response_SDXL(
+                                    #         at.summarizer(output)
+                                    #     ),
+                                    #     name="image1",
+                                    #     display="inline",
+                                    #     size="large",
+                                    # )  # _SDXL
+                                    img = cl.Image(
+                                        url=at.get_image_response(
+                                            pr.storyboard_prompt, at.summarizer(output)
+                                        ),
+                                        name="image1",
+                                        display="inline",
+                                        size="large",
+                                    )
+                                    print("\n generating image, complete")
+                                    image_message_to_assistant = cl.Message(
+                                        author="Climate Change Assistant",
+                                        content=" ",
+                                        elements=[img],
+                                    )
                                     await image_message_to_assistant.send()  # output_message_to_assistant.send()
-
 
                             await client.beta.threads.runs.submit_tool_outputs(
                                 thread_id=thread.id,
@@ -315,20 +355,36 @@ async def run_conversation(message_from_ui: cl.Message):
                 image_count = cl.user_session.get("generated_image_count")
                 print("Count =", image_count)
 
-                all_messages = await client.beta.threads.messages.list(thread_id=thread.id)
-                [input_tokens, output_tokens] = price_helper.tokens_per_user(all_messages.data[2:])  # skip last two messages
-                [tokens_for_last_input_message, tokens_for_last_output_message] = price_helper.tokens_per_user(all_messages.data[:2])  # tokens of the last 2 messages (top of the list are the latest messages)
-                cost = sum([
-                    Decimal(image_count * 0.04),  # dalle-3 images: Standard 1024×1024 image cost is 0.04
-                    price_helper.cost_of_input_tokens_per_model(input_tokens),
-                    price_helper.cost_of_output_tokens_per_model(output_tokens),
-                    price_helper.cost_of_input_tokens_per_model(tokens_for_last_input_message),
-                    price_helper.cost_of_output_tokens_per_model(tokens_for_last_output_message),
-                    price_helper.cost_of_input_tokens_per_model(input_tokens + output_tokens)  # the assistant will read all previous messages as input to generate the response
-                ])
+                all_messages = await client.beta.threads.messages.list(
+                    thread_id=thread.id
+                )
+                [input_tokens, output_tokens] = price_helper.tokens_per_user(
+                    all_messages.data[2:]
+                )  # skip last two messages
+                [tokens_for_last_input_message, tokens_for_last_output_message] = (
+                    price_helper.tokens_per_user(all_messages.data[:2])
+                )  # tokens of the last 2 messages (top of the list are the latest messages)
+                cost = sum(
+                    [
+                        Decimal(
+                            image_count * 0.04
+                        ),  # dalle-3 images: Standard 1024×1024 image cost is 0.04
+                        price_helper.cost_of_input_tokens_per_model(input_tokens),
+                        price_helper.cost_of_output_tokens_per_model(output_tokens),
+                        price_helper.cost_of_input_tokens_per_model(
+                            tokens_for_last_input_message
+                        ),
+                        price_helper.cost_of_output_tokens_per_model(
+                            tokens_for_last_output_message
+                        ),
+                        price_helper.cost_of_input_tokens_per_model(
+                            input_tokens + output_tokens
+                        ),  # the assistant will read all previous messages as input to generate the response
+                    ]
+                )
                 cost_message = cl.Message(
                     author="system",
-                    content=f"The minimum total cost for this conversation so far is: ${round(cost, 6)}\n{consts.note_message}"
+                    content=f"The minimum total cost for this conversation so far is: ${round(cost, 6)}\n{consts.note_message}",
                 )
                 await cost_message.send()
 
@@ -339,22 +395,29 @@ async def run_conversation(message_from_ui: cl.Message):
                 for run in runs.data:
                     print("run: ", run)
                     if run.status == "requires_action":
-                        await client.beta.threads.runs.cancel(thread_id=thread.id, run_id=run.id)
-                    elif run.status not in ["cancelled", "failed", "completed", "expired"]:
+                        await client.beta.threads.runs.cancel(
+                            thread_id=thread.id, run_id=run.id
+                        )
+                    elif run.status not in [
+                        "cancelled",
+                        "failed",
+                        "completed",
+                        "expired",
+                    ]:
                         is_completed = False
                         break
-                if is_completed == True:
+                if is_completed is True:
                     break
                 await cl.sleep(1)
 
             break
 
 
-@cl.oauth_callback
-def oauth_callback(
-    provider_id: str,
-    token: str,
-    raw_user_data: Dict[str, str],
-    default_app_user: cl.AppUser
-) -> Optional[cl.AppUser]:
-    return default_app_user
+# @cl.oauth_callback
+# def oauth_callback(
+#     provider_id: str,
+#     token: str,
+#     raw_user_data: Dict[str, str],
+#     default_app_user: cl.AppUser,
+# ) -> Optional[cl.AppUser]:
+#     return default_app_user
