@@ -60,7 +60,7 @@ def cost_of_input_tokens_per_model(user_tokens):
     elif model == "gpt-3.5-turbo-1106":
         user_tokens_cost = (user_tokens * 0.001) / 1000
     elif "gpt-3.5-turbo" in model:
-        return cost_of_input_tokens_per_model(user_tokens, model="gpt-3.5-turbo-1106")
+        user_tokens_cost = (user_tokens * 0.003) / 1000
     else:
         raise NotImplementedError(
             f"""cost_of_input_tokens_per_model() is not implemented for model {model}."""
@@ -80,7 +80,7 @@ def cost_of_output_tokens_per_model(assistant_tokens):
     elif model == "gpt-3.5-turbo-1106":
         assistant_tokens_cost = (assistant_tokens * 0.002) / 1000
     elif "gpt-3.5-turbo" in model:
-        return cost_of_output_tokens_per_model(assistant_tokens, model="gpt-3.5-turbo-1106")
+        assistant_tokens_cost = (assistant_tokens * 0.004) / 1000
     else:
         raise NotImplementedError(
             f"""cost_of_output_tokens_per_model() is not implemented for model {model}."""

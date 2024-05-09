@@ -294,7 +294,6 @@ async def run_conversation(message_from_ui: cl.Message):
                                     image_message_to_assistant = cl.Message(author="Climate Change Assistant", content=' ', elements=[img])
                                     await image_message_to_assistant.send()  # output_message_to_assistant.send()
 
-                                run.status = "completed"
 
                             await client.beta.threads.runs.submit_tool_outputs(
                                 thread_id=thread.id,
@@ -332,6 +331,22 @@ async def run_conversation(message_from_ui: cl.Message):
                     content=f"The minimum total cost for this conversation so far is: ${round(cost, 6)}\n{consts.note_message}"
                 )
                 await cost_message.send()
+
+            # Wait until the run is done (cancelled, failed, completed, expired)
+            while True:
+                runs = await client.beta.threads.runs.list(thread_id=thread.id)
+                is_completed = True
+                for run in runs.data:
+                    print("run: ", run)
+                    if run.status == "requires_action":
+                        await client.beta.threads.runs.cancel(thread_id=thread.id, run_id=run.id)
+                    elif run.status not in ["cancelled", "failed", "completed", "expired"]:
+                        is_completed = False
+                        break
+                if is_completed == True:
+                    break
+                await cl.sleep(1)
+
             break
 
 
