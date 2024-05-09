@@ -1,7 +1,7 @@
 openai==1.3.5
 chainlit==0.7.604
-accelerate
 tiktoken
+# accelerate
 # Pillow
 # diffusers
 # torch
