@@ -83,8 +83,29 @@ async def start_chat():
 
 @cl.on_message
 async def run_conversation(message_from_ui: cl.Message):
-    count = 0
     thread = cl.user_session.get("thread")  # type: Thread
+
+    # Wait until the run is done (cancelled, failed, completed, expired)
+    while True:
+        runs = await client.beta.threads.runs.list(thread_id=thread.id)
+        is_completed = True
+        for run in runs.data:
+            if run.status == "requires_action":
+                await client.beta.threads.runs.cancel(
+                    thread_id=thread.id, run_id=run.id
+                )
+            elif run.status not in [
+                "cancelled",
+                "failed",
+                "completed",
+                "expired",
+            ]:
+                is_completed = False
+                break
+        if is_completed is True:
+            break
+        await cl.sleep(1)
+
     # Add the message to the thread
     await client.beta.threads.messages.create(
         thread_id=thread.id, role="user", content=message_from_ui.content
@@ -126,24 +147,17 @@ async def run_conversation(message_from_ui: cl.Message):
                 )
                 await process_thread_message(message_references, thread_message)
 
-            print("line 116 about the call the tools call loop")
-            count += 1
-            print(str(count))
-
             if step_details.type == "tool_calls":
-                loading_message = "Retrieving information, please stand by."
-                loading_message_to_assistant = cl.Message(
-                    author="assistant", content=loading_message
-                )
-                await loading_message_to_assistant.send()  # output_message_to_assistant.send()
+                # loading_message = "Retrieving information, please stand by."
+                # loading_message_to_assistant = cl.Message(
+                # author="assistant", content=loading_message
+                # )
+                # await loading_message_to_assistant.send()  # output_message_to_assistant.send()
 
                 for tool_call in step_details.tool_calls:
-                    print("top of tool call loop line 119")
 
                     # IF tool call is a disctionary, convert to object
                     if isinstance(tool_call, dict):
-                        print("here is a tool call at line 120")
-                        print(tool_call)
                         tool_call = DictToObject(tool_call)
                         if tool_call.type == "function":
                             function = DictToObject(tool_call.function)
@@ -152,10 +166,6 @@ async def run_conversation(message_from_ui: cl.Message):
                             code_interpretor = DictToObject(tool_call.code_interpretor)
                             tool_call.code_interpretor = code_interpretor
 
-                    print("here are step details at line 130")
-                    print(step_details)
-                    print("here is tool call at line 132")
-                    print(tool_call)
                     if tool_call.type == "code_interpreter":
                         if not tool_call.id in message_references:
                             message_references[tool_call.id] = cl.Message(
@@ -224,17 +234,12 @@ async def run_conversation(message_from_ui: cl.Message):
                             # Not sure why, but sometimes this is returned rather than name
                             function_name = function_name.replace("_schema", "")
 
-                            print(f"FUNCTION NAME: {function_name}")
-                            print(function_args)
-
                             summary, parsed_output = function_mappings[function_name](
                                 **function_args
                             )  # , output, image
 
                             # img = cl.Image(url=image, name="image1", display="inline", size="large")  # path=image_path,
                             # img = Image.open(filename)
-
-                            print("line 213 bottom of tool loop")
 
                             if summary is not None:  # output
                                 # tool_output_id = tool_call.id + "output"
@@ -271,11 +276,8 @@ async def run_conversation(message_from_ui: cl.Message):
                                     water_output,
                                     land_output,
                                 ]
-                                print("got story chunks")
 
                                 # iterating through this list
-                                # prompts_list = [temperature_prompt, water_prompt, land_prompt]
-
                                 for i in range(len(story_chunks)):
                                     output = ""
                                     story = at.story_completion(
@@ -387,29 +389,6 @@ async def run_conversation(message_from_ui: cl.Message):
                     content=f"The minimum total cost for this conversation so far is: ${round(cost, 6)}\n{consts.note_message}",
                 )
                 await cost_message.send()
-
-            # Wait until the run is done (cancelled, failed, completed, expired)
-            while True:
-                runs = await client.beta.threads.runs.list(thread_id=thread.id)
-                is_completed = True
-                for run in runs.data:
-                    print("run: ", run)
-                    if run.status == "requires_action":
-                        await client.beta.threads.runs.cancel(
-                            thread_id=thread.id, run_id=run.id
-                        )
-                    elif run.status not in [
-                        "cancelled",
-                        "failed",
-                        "completed",
-                        "expired",
-                    ]:
-                        is_completed = False
-                        break
-                if is_completed is True:
-                    break
-                await cl.sleep(1)
-
             break
 
 
