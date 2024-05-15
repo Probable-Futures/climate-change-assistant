@@ -201,7 +201,6 @@ def get_pf_data_new(address, country, warming_scenario="2.0"):
         }
     """
     )
-    print(query)
 
     access_token = get_pf_token()
     url = pf_api_url + "/graphql"
@@ -213,7 +212,6 @@ def get_pf_data_new(address, country, warming_scenario="2.0"):
     response = str(response.json()).replace("'", '"')
 
     parsed_output = json_to_dataframe(response, address=address, country=country)
-    print("got output of pf_data_new")
 
     summary = summary_completion(str(address) + " " + str(country))
 

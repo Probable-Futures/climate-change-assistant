@@ -57,8 +57,6 @@ async def process_thread_message(
                     size="large",
                 ),
             ]
-            print("trying to display message line 53")
-
             if id not in message_references:
                 message_references[id] = cl.Message(
                     author=thread_message.role,
@@ -183,7 +181,6 @@ async def run_conversation(message_from_ui: cl.Message):
                             )
                             await message_references[tool_call.id].update()
 
-                        print("here is tool call id in line 151")
                         tool_output_id = tool_call.id + "output"
 
                         if not tool_output_id in message_references:
@@ -284,8 +281,6 @@ async def run_conversation(message_from_ui: cl.Message):
                                         pr.prompts_list[i], story_chunks[i]
                                     )
 
-                                    print(story)
-
                                     msg = cl.Message(content="")
                                     await msg.send()
 
@@ -301,8 +296,6 @@ async def run_conversation(message_from_ui: cl.Message):
                                     # await loading_message_to_assistant.send()
 
                                     # await cl.sleep(10)
-
-                                    print("\n generating image, begin")
 
                                     generated_image_count = cl.user_session.get(
                                         "generated_image_count"
@@ -329,7 +322,6 @@ async def run_conversation(message_from_ui: cl.Message):
                                         display="inline",
                                         size="large",
                                     )
-                                    print("\n generating image, complete")
                                     image_message_to_assistant = cl.Message(
                                         author="Climate Change Assistant",
                                         content=" ",
@@ -350,12 +342,9 @@ async def run_conversation(message_from_ui: cl.Message):
 
         await cl.sleep(1)  # Refresh every second
 
-        print(f"RUN STATUS: {run.status}")
-
         if run.status in ["cancelled", "failed", "completed", "expired"]:
             if consts.is_dev:
                 image_count = cl.user_session.get("generated_image_count")
-                print("Count =", image_count)
 
                 all_messages = await client.beta.threads.messages.list(
                     thread_id=thread.id
